@@ -7,7 +7,7 @@ module Semrush
   # * :offset (ex: :offset => 5)
   # * :export_columns (ex: :export_columns => "Dn,Rk")
   class Report
-   
+    DBS = [:us, :uk, :ca, :ru, :de, :fr, :es, :it, :br, :au, :bing-us, :ar, :be, :ch, :dk, :fi, :hk, :ie, :il, :mx, :nl, :no, :pl, :se, :sg, :tr, :mobile-us, :jp, :in, :hu] #"us" - for Google.com, "uk" - for Google.co.uk, "ru" - for Google.ru, "de" for Google.de, "fr" for Google.fr, "es" for Google.es, "it" for Google.it Beta, "br" for Google.com.br Beta, "au" for Google.com.au Beta, etc
     REPORT_TYPES = [:domain_rank, :domain_organic, :domain_adwords, :domain_organic_organic, :domain_adwords_adwords, :domain_organic_adwords, :domain_adwords_organic, :domain_adwords_historical,
                     :phrase_this, :phrase_organic, :phrase_related, :phrase_adwords_historical, :phrase_fullsearch,
                     :url_organic, :url_adwords]
@@ -302,12 +302,14 @@ module Semrush
     #
     # more details in http://www.semrush.com/api.html
     def validate_parameters params = {}
-      params.symbolize_keys!      
+      params.symbolize_keys!
+      params.delete(:db) unless DBS.include?(params[:db].try(:to_sym))
       params.delete(:report_type) unless REPORT_TYPES.include?(params[:report_type].try(:to_sym))
       params.delete(:request_type) unless REQUEST_TYPES.include?(params[:request_type].try(:to_sym))
       @parameters = {:db => "us", :api_key => Semrush.api_key, :limit => "", :offset => "", :export_columns => "", :display_sort => "", :display_filter => "", :display_date => ""}.merge(@parameters).merge(params)
       raise Semrush::Exception::Nolimit.new(self, "The limit parameter is missing: a limit is required.") unless @parameters[:limit].present? && @parameters[:limit].to_i>0
-      raise Semrush::Exception::BadArgument.new(self, "Request parameter is missing: Domain name, URL, or keywords are required.") unless @parameters[:request].present?      
+      raise Semrush::Exception::BadArgument.new(self, "Request parameter is missing: Domain name, URL, or keywords are required.") unless @parameters[:request].present?
+      raise Semrush::Exception::BadArgument.new(self, "Bad db: #{@parameters[:db]}") unless DBS.include?(@parameters[:db].try(:to_sym))
       raise Semrush::Exception::BadArgument.new(self, "Bad report type: #{@parameters[:report_type]}") unless REPORT_TYPES.include?(@parameters[:report_type].try(:to_sym))
       raise Semrush::Exception::BadArgument.new(self, "Bad request type: #{@parameters[:request_type]}") unless REQUEST_TYPES.include?(@parameters[:request_type].try(:to_sym))
     end
